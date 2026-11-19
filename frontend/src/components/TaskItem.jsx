@@ -1,35 +1,56 @@
 import { useState } from "react";
+import api from "../services/api";
 
 function TaskItem({ task, tasks, setTasks }) {
 
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(task.title);
 
-  function deleteTask() {
-    setTasks(tasks.filter((t) => t.id !== task.id));
-  }
+ async function deleteTask() {
+  try {
+    await api.delete(`/tasks/${task.id}`);
 
-  function toggleComplete() {
+    setTasks(tasks.filter((t) => t.id !== task.id));
+  } catch (error) {
+    console.error("Error deleting task:", error);
+  }
+}
+
+ async function toggleComplete() {
+  try {
+    const response = await api.put(`/tasks/${task.id}`, {
+      completed: !task.completed,
+    });
+
     setTasks(
       tasks.map((t) =>
-        t.id === task.id
-          ? { ...t, completed: !t.completed }
-          : t
+        t.id === task.id ? response.data : t
       )
     );
+  } catch (error) {
+    console.error("Error updating task:", error);
   }
+}
 
-  function saveTask() {
+ async function saveTask() {
+  if (!text.trim()) return;
+
+  try {
+    const response = await api.put(`/tasks/${task.id}`, {
+      title: text.trim(),
+    });
+
     setTasks(
       tasks.map((t) =>
-        t.id === task.id
-          ? { ...t, title: text }
-          : t
+        t.id === task.id ? response.data : t
       )
     );
 
     setEditing(false);
+  } catch (error) {
+    console.error("Error editing task:", error);
   }
+}
 
   return (
     <div className="task">

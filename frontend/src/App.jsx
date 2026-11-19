@@ -2,29 +2,38 @@ import { useState, useEffect } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import "./App.css";
+import api from "./services/api";
+
 
 function App() {
 
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("tasks");
-    return saved ? JSON.parse(saved) : [];
-  });
+ const [tasks, setTasks] = useState([]);
 
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const response = await api.get("/tasks");
 
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  fetchTasks();
+}, []);
 
   const [filter, setFilter] = useState("all");
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = tasks.filter((task) => {
+  if (filter === "completed") {
+    return task.completed;
+  }
 
-    if(filter==="completed")
-        return task.completed;
+  if (filter === "pending") {
+    return !task.completed;
+  }
 
-    if(filter==="pending")
-        return !task.completed;
-
-    return true;
+  return true;
 });
   return (
     <div className="container">
